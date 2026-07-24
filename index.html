@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="theme-color" content="#bcd7ca" />
+    <meta
+      name="description"
+      content="案件の今とつながりが、入れるだけで見えるスマホアプリ。"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="あの案件" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>あの案件どうなった？</title>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="hero-orb hero-orb-one"></div>
+        <div class="hero-orb hero-orb-two"></div>
+        <div class="hero-inner">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="eyebrow">入れるだけ。今とつながりが見える。</p>
+          <h1>あの案件<br />どうなった？</h1>
+          <p class="hero-copy">
+            頭の中やチャットに散らばった仕事を、<br />
+            ここへひとつずつ置いていきましょう。
+          </p>
+          <a class="hero-cta" href="#network">
+            つながりを見る
+            <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+      </header>
+
+      <div class="page-shell">
+        <section
+          class="panel network-panel network-feature"
+          id="network"
+          aria-labelledby="network-title"
+        >
+          <div class="network-feature-heading">
+            <div>
+              <p class="network-kicker">いまの仕事を、ひと目で。</p>
+              <h2 id="network-title">つながりを見る</h2>
+              <p class="section-description">案件と記録の関係を、ひとつの図で確認します。</p>
+            </div>
+            <a class="network-add-link" href="#add">＋ 記録を追加</a>
+          </div>
+          <p class="network-intro">
+            別の案件に同じ人名や資料名がある場合は、その言葉を通じてつながります。
+          </p>
+          <div id="network-view"></div>
+          <div id="connection-legend" class="connection-legend is-hidden"></div>
+        </section>
+
+        <section class="panel composer-panel" id="add" aria-labelledby="add-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="add-title">新しい記録</h2>
+              <p class="section-description">案件名と、いまの状況を入力します。</p>
+            </div>
+          </div>
+
+          <form id="entry-form">
+            <label class="field">
+              <span>何の件？</span>
+              <input
+                id="case-name"
+                data-testid="case-name"
+                list="case-suggestions"
+                placeholder="例：○○社のホームページ"
+                autocomplete="off"
+              />
+              <datalist id="case-suggestions"></datalist>
+            </label>
+
+            <label class="field">
+              <span>いまどうなってる？</span>
+              <textarea
+                id="case-memo"
+                data-testid="case-memo"
+                placeholder="例：見積もりを送って、返事待ち"
+                rows="3"
+              ></textarea>
+            </label>
+
+            <div class="photo-row">
+              <label class="photo-button">
+                <input id="photo-input" type="file" accept="image/*" capture="environment" />
+                <span class="photo-icon" aria-hidden="true">＋</span>
+                <span id="photo-label">写真も入れる</span>
+              </label>
+              <div id="photo-preview" class="photo-preview is-hidden">
+                <img id="photo-preview-image" src="" alt="選んだ写真" />
+                <button id="remove-photo" type="button" aria-label="選んだ写真を外す">×</button>
+              </div>
+            </div>
+
+            <p id="error-message" class="message error-message is-hidden" role="alert"></p>
+
+            <button class="primary-button" data-testid="add-entry" type="submit">
+              <span class="button-label">追加する</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <div id="notice" class="notice is-hidden" role="status">
+            <span id="notice-text"></span>
+            <button id="undo-button" class="is-hidden" type="button">取り消す</button>
+          </div>
+        </section>
+
+        <section class="panel current-panel" aria-labelledby="current-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="current-title">案件一覧</h2>
+              <p class="section-description">案件を選ぶと、最新の状況と履歴が開きます。</p>
+            </div>
+          </div>
+
+          <label class="search-field">
+            <span class="search-icon" aria-hidden="true"></span>
+            <span class="sr-only">何の件を見る？</span>
+            <input id="case-search" data-testid="case-search" placeholder="何の件を見る？" />
+            <button id="clear-search" class="is-hidden" type="button" aria-label="探す文字を消す">
+              ×
+            </button>
+          </label>
+
+          <div id="loading-state" class="loading-state">保存した内容を開いています…</div>
+          <div id="case-list" class="case-list is-hidden" data-testid="case-list"></div>
+        </section>
+
+        <section class="data-panel" aria-labelledby="data-title">
+          <div>
+            <h2 id="data-title">データを守る</h2>
+            <p>この端末だけに保存されています。ときどきファイルに残しておくと安心です。</p>
+          </div>
+          <div class="data-actions">
+            <button id="save-data" type="button" disabled>データを保存</button>
+            <button id="restore-data" class="secondary" type="button">データを戻す</button>
+            <input
+              id="restore-input"
+              type="file"
+              accept=".anoken,application/json"
+              hidden
+            />
+          </div>
+        </section>
+      </div>
+
+      <dialog
+        id="case-detail"
+        class="case-detail"
+        data-testid="case-detail"
+        aria-labelledby="case-dialog-title"
+      ></dialog>
+
+      <footer>
+        <div class="footer-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p>あなたの仕事は、あなたの端末の中だけに。</p>
+      </footer>
+    </main>
+
+    <script src="./app.bundle.js"></script>
+  </body>
+</html>
