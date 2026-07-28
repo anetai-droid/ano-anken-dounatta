@@ -834,7 +834,7 @@ function clearPhoto() {
   elements.photoInput.value = "";
   elements.photoPreviewImage.src = "";
   elements.photoPreview.classList.add("is-hidden");
-  elements.photoLabel.textContent = "写真も入れる";
+  elements.photoLabel.textContent = "写真フォルダから選ぶ";
 }
 
 function currentData() {
