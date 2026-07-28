@@ -179,6 +179,7 @@ function buildCases(entries) {
         key,
         name: sorted[0].caseName,
         entries: sorted,
+        history: [...sorted].reverse(),
         latest: sorted[0],
         searchText: normalizeText(
           sorted.map((entry) => `${entry.caseName} ${entry.memo}`).join(" "),
@@ -258,10 +259,27 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-function renderSuggestions(target, cases) {
-  target.innerHTML = cases
-    .map((item) => `<option value="${escapeHtml(item.name)}"></option>`)
-    .join("");
+function renderCasePicker(target, cases, currentName = "") {
+  const currentKey = normalizeText(currentName);
+  const selectedCase = cases.find((item) => item.key === currentKey);
+
+  if (cases.length === 0) {
+    target.innerHTML = '<option value="">まだタイトルがありません</option>';
+    target.disabled = true;
+    return;
+  }
+
+  target.disabled = false;
+  target.innerHTML = `
+    <option value="">以前のタイトルから選ぶ</option>
+    ${cases
+      .map(
+        (item) =>
+          `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`,
+      )
+      .join("")}
+  `;
+  target.value = selectedCase?.name ?? "";
 }
 
 function renderCaseList(target, cases, selectedKey) {
@@ -437,10 +455,18 @@ function startGraph(target, model) {
       const to = nodeById.get(edge.to);
       const line = edgeElements[index];
       if (!from || !to || !line) return;
-      line.setAttribute("x1", from.x);
-      line.setAttribute("y1", from.y);
-      line.setAttribute("x2", to.x);
-      line.setAttribute("y2", to.y);
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const distance = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+      const startPadding = Math.min((from.radius ?? 0) + 2, distance / 3);
+      const endPadding = Math.min(
+        (to.radius ?? 0) + (edge.type === "timeline" ? 7 : 2),
+        distance / 3,
+      );
+      line.setAttribute("x1", from.x + (dx / distance) * startPadding);
+      line.setAttribute("y1", from.y + (dy / distance) * startPadding);
+      line.setAttribute("x2", to.x - (dx / distance) * endPadding);
+      line.setAttribute("y2", to.y - (dy / distance) * endPadding);
     });
   };
 
@@ -598,8 +624,10 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
     const radius = compact
       ? 95 + (hashNumber(`${node.id}:radius`) % 75)
       : 135 + (hashNumber(`${node.id}:radius`) % 120);
+    const nodeRadius = node.type === "case" ? 13 : node.type === "word" ? 9 : 6;
     nodes.push({
       ...node,
+      radius: nodeRadius,
       x: width / 2 + Math.cos(angle) * radius,
       y: height / 2 + Math.sin(angle) * radius,
       vx: 0,
@@ -623,15 +651,18 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
       caseKey: item.key,
     });
 
-    item.entries.forEach((entry) => {
+    let previousId = caseId;
+    item.history.forEach((entry, index) => {
       const entryId = `entry:${entry.id}`;
       addNode({
         id: entryId,
         label: entry.memo || "写真",
         type: "entry",
         caseKey: item.key,
+        isLatest: index === item.history.length - 1,
       });
-      addEdge(caseId, entryId, "entry");
+      addEdge(previousId, entryId, "timeline");
+      previousId = entryId;
     });
   });
 
@@ -653,13 +684,19 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
   const edgeMarkup = edges
     .map(
       (edge, index) =>
-        `<line data-edge-index="${index}" class="web-edge ${edge.type}"></line>`,
+        `<line
+          data-edge-index="${index}"
+          data-edge-from="${escapeHtml(edge.from)}"
+          data-edge-to="${escapeHtml(edge.to)}"
+          class="web-edge ${edge.type}"
+          ${edge.type === "timeline" ? 'marker-end="url(#timeline-arrow)"' : ""}
+        ></line>`,
     )
     .join("");
 
   const nodeMarkup = nodes
     .map((node) => {
-      const radius = node.type === "case" ? 13 : node.type === "word" ? 9 : 6;
+      const radius = node.radius;
       const labelLimit = node.type === "entry" ? (compact ? 14 : 22) : 16;
       const label =
         node.label.length > labelLimit ? `${node.label.slice(0, labelLimit)}…` : node.label;
@@ -671,7 +708,7 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
           data-node-id="${escapeHtml(node.id)}"
           ${caseAttribute}
           ${node.caseKey ? 'role="button" tabindex="0"' : ""}
-          class="web-node ${node.type} ${selectedKey && node.caseKey === selectedKey ? "is-selected" : ""}"
+          class="web-node ${node.type} ${node.isLatest ? "is-latest" : ""} ${selectedKey && node.caseKey === selectedKey ? "is-selected" : ""}"
         >
           <circle r="${radius}"></circle>
           <text x="${radius + 6}" y="5">${escapeHtml(label)}</text>
@@ -685,11 +722,24 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
     <div class="network-canvas obsidian-network" aria-label="案件のつながり">
       <div class="network-caption">
         <span><i class="case-swatch"></i>案件</span>
-        <span><i class="entry-swatch"></i>記録</span>
+        <span><i class="entry-swatch"></i>記録の流れ</span>
         <span><i class="word-swatch"></i>共通の言葉</span>
       </div>
       <p class="network-help">ドラッグで移動・押すと確認／削除</p>
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="案件・記録・共通する言葉のつながり">
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="案件から古い記録、新しい記録へ続く流れと、共通する言葉のつながり">
+        <defs>
+          <marker
+            id="timeline-arrow"
+            markerWidth="8"
+            markerHeight="8"
+            refX="6"
+            refY="3"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L0,6 L7,3 z" class="timeline-arrowhead"></path>
+          </marker>
+        </defs>
         <g class="web-edges">${edgeMarkup}</g>
         <g class="web-nodes">${nodeMarkup}</g>
       </svg>
@@ -729,6 +779,7 @@ function renderGraph(target, legendTarget, cases, connections, selectedKey) {
 const elements = {
   form: document.querySelector("#entry-form"),
   caseName: document.querySelector("#case-name"),
+  casePicker: document.querySelector("#case-picker"),
   memo: document.querySelector("#case-memo"),
   photoInput: document.querySelector("#photo-input"),
   photoLabel: document.querySelector("#photo-label"),
@@ -748,7 +799,6 @@ const elements = {
   detail: document.querySelector("#case-detail"),
   network: document.querySelector("#network-view"),
   legend: document.querySelector("#connection-legend"),
-  suggestions: document.querySelector("#case-suggestions"),
   saveData: document.querySelector("#save-data"),
   restoreData: document.querySelector("#restore-data"),
   restoreInput: document.querySelector("#restore-input"),
@@ -807,7 +857,7 @@ function render() {
       )
     : [];
 
-  renderSuggestions(elements.suggestions, cases);
+  renderCasePicker(elements.casePicker, cases, elements.caseName.value);
   renderCaseList(elements.caseList, filtered, selectedKey);
   renderCaseDetail(
     elements.detail,
@@ -997,6 +1047,20 @@ async function restoreData(event) {
 elements.form.addEventListener("submit", addEntry);
 elements.undo.addEventListener("click", undoLastAdd);
 elements.removePhoto.addEventListener("click", clearPhoto);
+
+elements.casePicker.addEventListener("change", () => {
+  if (!elements.casePicker.value) return;
+  elements.caseName.value = elements.casePicker.value;
+  setError();
+  elements.memo.focus();
+});
+
+elements.caseName.addEventListener("input", () => {
+  const { cases } = currentData();
+  const currentKey = normalizeText(elements.caseName.value);
+  const existing = cases.find((item) => item.key === currentKey);
+  elements.casePicker.value = existing?.name ?? "";
+});
 
 elements.photoInput.addEventListener("change", (event) => {
   const file = event.target.files?.[0] ?? null;

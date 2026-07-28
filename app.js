@@ -3,13 +3,14 @@ import { buildCases, buildConnections, normalizeText } from "./links.js";
 import {
   renderCaseDetail,
   renderCaseList,
+  renderCasePicker,
   renderGraph,
-  renderSuggestions,
 } from "./view.js";
 
 const elements = {
   form: document.querySelector("#entry-form"),
   caseName: document.querySelector("#case-name"),
+  casePicker: document.querySelector("#case-picker"),
   memo: document.querySelector("#case-memo"),
   photoInput: document.querySelector("#photo-input"),
   photoLabel: document.querySelector("#photo-label"),
@@ -29,7 +30,6 @@ const elements = {
   detail: document.querySelector("#case-detail"),
   network: document.querySelector("#network-view"),
   legend: document.querySelector("#connection-legend"),
-  suggestions: document.querySelector("#case-suggestions"),
   saveData: document.querySelector("#save-data"),
   restoreData: document.querySelector("#restore-data"),
   restoreInput: document.querySelector("#restore-input"),
@@ -88,7 +88,7 @@ function render() {
       )
     : [];
 
-  renderSuggestions(elements.suggestions, cases);
+  renderCasePicker(elements.casePicker, cases, elements.caseName.value);
   renderCaseList(elements.caseList, filtered, selectedKey);
   renderCaseDetail(
     elements.detail,
@@ -278,6 +278,20 @@ async function restoreData(event) {
 elements.form.addEventListener("submit", addEntry);
 elements.undo.addEventListener("click", undoLastAdd);
 elements.removePhoto.addEventListener("click", clearPhoto);
+
+elements.casePicker.addEventListener("change", () => {
+  if (!elements.casePicker.value) return;
+  elements.caseName.value = elements.casePicker.value;
+  setError();
+  elements.memo.focus();
+});
+
+elements.caseName.addEventListener("input", () => {
+  const { cases } = currentData();
+  const currentKey = normalizeText(elements.caseName.value);
+  const existing = cases.find((item) => item.key === currentKey);
+  elements.casePicker.value = existing?.name ?? "";
+});
 
 elements.photoInput.addEventListener("change", (event) => {
   const file = event.target.files?.[0] ?? null;

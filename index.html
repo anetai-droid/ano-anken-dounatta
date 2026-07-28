@@ -45,12 +45,12 @@
             <div>
               <p class="network-kicker">いまの仕事を、ひと目で。</p>
               <h2 id="network-title">つながりを見る</h2>
-              <p class="section-description">案件と記録の関係を、ひとつの図で確認します。</p>
+              <p class="section-description">案件の経過と、別案件との関係をひとつの図で確認します。</p>
             </div>
             <a class="network-add-link" href="#add">＋ 記録を追加</a>
           </div>
           <p class="network-intro">
-            別の案件に同じ人名や資料名がある場合は、その言葉を通じてつながります。
+            同じ案件の記録は古い順に矢印でつながります。別の案件に同じ人名や資料名がある場合は、その言葉を通じてつながります。
           </p>
           <div id="network-view"></div>
           <div id="connection-legend" class="connection-legend is-hidden"></div>
@@ -60,21 +60,28 @@
           <div class="section-heading">
             <div>
               <h2 id="add-title">新しい記録</h2>
-              <p class="section-description">案件名と、いまの状況を入力します。</p>
+              <p class="section-description">以前のタイトルを選ぶか、新しいタイトルを入力します。</p>
             </div>
           </div>
 
           <form id="entry-form">
+            <label class="field existing-case-field">
+              <span>以前のタイトルを使う</span>
+              <select id="case-picker" aria-label="以前に作ったタイトルから選ぶ">
+                <option value="">まだタイトルがありません</option>
+              </select>
+            </label>
+
+            <p class="field-divider"><span>または</span></p>
+
             <label class="field">
-              <span>何の件？</span>
+              <span>タイトルを入力する</span>
               <input
                 id="case-name"
                 data-testid="case-name"
-                list="case-suggestions"
                 placeholder="例：○○社のホームページ"
                 autocomplete="off"
               />
-              <datalist id="case-suggestions"></datalist>
             </label>
 
             <label class="field">

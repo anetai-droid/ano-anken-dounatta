@@ -2265,3 +2265,73 @@ footer p {
     background: transparent;
   }
 }
+
+/* Chronological records and reusable case titles
+   -------------------------------------------------------------------------- */
+
+.field select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.82rem 2.75rem 0.82rem 0.95rem;
+  border: 1px solid #d8d8d5;
+  border-radius: 14px;
+  background:
+    linear-gradient(45deg, transparent 50%, #666666 50%) calc(100% - 20px) 50% / 6px 6px
+      no-repeat,
+    linear-gradient(135deg, #666666 50%, transparent 50%) calc(100% - 14px) 50% / 6px 6px
+      no-repeat,
+    #f1f1ef;
+  color: #3f3f3f;
+  font: inherit;
+  font-size: 1rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+.field select:focus {
+  border-color: #b68b00;
+  outline: 3px solid rgba(255, 216, 61, 0.28);
+}
+
+.field select:disabled {
+  color: #858585;
+  cursor: default;
+  opacity: 1;
+}
+
+.field-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: -0.2rem 0;
+  color: #8a8a87;
+  font-size: 0.9rem;
+}
+
+.field-divider::before,
+.field-divider::after {
+  height: 1px;
+  flex: 1;
+  background: #dededb;
+  content: "";
+}
+
+.web-edge.timeline {
+  stroke: #a8a8a5;
+  stroke-width: 1.8;
+}
+
+.timeline-arrowhead {
+  fill: #a8a8a5;
+}
+
+.web-node.entry.is-latest circle {
+  fill: #ffffff;
+  stroke: #d4a900;
+  stroke-width: 3;
+}
+
+.web-node.entry.is-latest text {
+  fill: #3f3f3f;
+  font-weight: 750;
+}

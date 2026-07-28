@@ -1,4 +1,4 @@
-const CACHE_NAME = "anoken-shell-v6";
+const CACHE_NAME = "anoken-shell-v7";
 const CORE_FILES = [
   "./",
   "./index.html",

@@ -80,6 +80,7 @@ export function buildCases(entries) {
         key,
         name: sorted[0].caseName,
         entries: sorted,
+        history: [...sorted].reverse(),
         latest: sorted[0],
         searchText: normalizeText(
           sorted.map((entry) => `${entry.caseName} ${entry.memo}`).join(" "),
